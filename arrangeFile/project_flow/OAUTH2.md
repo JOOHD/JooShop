@@ -507,7 +507,7 @@ OAuth2로 “누군지 확인”
 | 구분                           | 의미                         |
 | ---------------------------- | -------------------------- |
 | OAuth2 Provider Access Token | 카카오/네이버/구글 API를 호출하기 위한 토큰 |
-| NewShop JWT Access Token     | NewShop API 인증을 위한 토큰      |
+| JooShop JWT Access Token     | JooShop API 인증을 위한 토큰      |
 
 - 내 프로젝트에서는 보통 provider access token을 저장하지 않음.
 

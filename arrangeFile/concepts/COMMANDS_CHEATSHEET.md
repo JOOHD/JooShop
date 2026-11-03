@@ -95,7 +95,7 @@ git commit -m "타입: 설명"
 git push origin main
 
 # 원격 저장소 이름이 바뀐 뒤로 계속 뜨는 안내문 없애기 (아직 안 함 — 언젠가 해야 함)
-git remote set-url origin https://github.com/JOOHD/NewShop.git
+git remote set-url origin https://github.com/JOOHD/JooShop.git
 
 # 최근 커밋 로그 확인
 git log --oneline -10

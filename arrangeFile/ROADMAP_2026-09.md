@@ -115,7 +115,7 @@
 1. EC2 SSH 접속 → `docker compose -f docker-compose.prod.yml ps`로 컨테이너 상태 확인, `logs -f app`으로 부팅 로그/에러 확인 → bad gateway 원인 특정
 2. 해결되면 사이트에서 TOP5 섹션 정상 노출 확인
 3. `arrangeFile` 디렉토리 재정리(`project_sum` → `concepts`/`project_flow`/`portfolio`) 건이 아직 로컬에 커밋 안 된 채 남아있음 — 별도로 커밋할 것 (`git add arrangeFile/`)
-4. git remote가 옛 저장소 이름(`Shop.git`)을 보고 있음 — `git remote set-url origin https://github.com/JOOHD/NewShop.git`로 갱신 권장 (아직 안 함)
+4. git remote가 옛 저장소 이름(`Shop.git`)을 보고 있음 — `git remote set-url origin https://github.com/JOOHD/JooShop.git`로 갱신 권장 (저장소 이름도 NewShop → JooShop으로 변경 완료, 로컬·EC2 remote 갱신)
 5. 회차11(셀프 면접 연습 1) 아직 시작 전 — 회차10까지 완료 상태에서 포폴 개선(TOP5 기능) 작업으로 잠깐 벗어났던 것
 
 ### 회차 8 — 마무리 + 병행 작업 시작
@@ -169,7 +169,7 @@
 - [ ] Swagger/OpenAPI 어노테이션 추가해서 API 문서 자동 생성 — 회차11로 분리해서 진행
 
 **그냥 확인만 하면 되는 것**
-- [x] GitHub 저장소가 Public인지 확인 — Public 확인 완료 (`github.com/JOOHD/NewShop`)
+- [x] GitHub 저장소가 Public인지 확인 — Public 확인 완료 (`github.com/JOOHD/JooShop`)
 
 **완료 기준**: P0 3개는 스크린샷만 남음, P1은 회차11/15로 이관
 
