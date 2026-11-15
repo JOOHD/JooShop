@@ -148,10 +148,17 @@ Form Login + OAuth2 통합 흐름 모두 `TokenService.issueLoginTokens()`로 �
 
 `OrderService.confirmOrder()` 하나로 통합해, 중간에 예외가 나도 부분 데이터가 DB에 남지 않도록 트랜잭션으로 원자성을 보장했다. Redis는 주문 관리에서 완전히 손을 떼고, 지금은 "최근 본 상품" 조회 이력 관리에만 쓰인다 — **"일단 넣고 보는" Redis 활용이 아니라, 각 기술을 실제로 필요한 곳에만 쓰도록 역할을 재정리**한 경험.
 
-**왜 Iamport 서버 재검증인가?** (이 부분은 Redis 구조와 무관하게 동일)
+**서버가 금액의 기준이다 (이후 재설계)**
 
-클라이언트에서 결제 금액을 조작하여 서버에 전달할 수 있다.
-서버가 `imp_uid`로 Iamport API를 직접 호출하여 실제 결제 금액을 재조회하고 주문 금액과 비교 — **클라이언트 위변조를 서버에서 차단**.
+처음엔 "클라이언트가 보낸 금액 vs Iamport 실결제액"만 비교했는데, 둘 다 클라이언트가 조작할 수 있어서 기준이 될 수 없다는 걸 깨닫고 구조를 다시 잡았다.
+
+- **주문 생성 시 서버가 확정**: 할인가(`Product.getDiscountedPrice`)와 배송비(`Orders.calculateDeliveryFee`)를 서버가 계산해 PENDING 주문과 주문번호(merchantUid)를 발급. 화면은 서버 미리보기 API(`/api/v1/order/preview`) 값만 보여 준다.
+- **결제 후 검증**: `imp_uid`로 Iamport를 직접 조회해 실결제액을 가져오고, 주문 행 잠금 → 소유자 → 주문번호 → 멱등성 → 상태(PENDING) → **DB 금액 == PG 금액** 순으로 확인. 불일치·결제 불가 상태면 승인된 결제를 자동 취소.
+- **중복 결제 방어**: 조회 → 주문 행 잠금(`SELECT ... FOR UPDATE`) → `PaymentRecord.imp_uid` UNIQUE. 동시 요청 5개 테스트에서 잠금 없이 5건 → 적용 후 1건.
+- **상태 전이 / 정리**: `PaymentStatus.canTransitionTo`로 허용된 전이만 통과. 30분 넘게 결제 안 된 PENDING 주문은 만료 배치가 취소하고 재고 복구. 주문내역의 "주문 취소"도 PG 환불 후 재고를 되돌린다.
+- **바로 구매와 장바구니**는 같은 주문 로직(`OrderLine`)으로 처리하고, 타인 장바구니 접근(IDOR)은 소유자 검증으로 차단.
+- 자세한 설계와 겪은 문제 24건: [`PAYMENT_DESIGN.md`](../concepts/PAYMENT_DESIGN.md), 장애 기록 #9, #11, #12는 [`TROUBLESHOOTING.md`](../concepts/TROUBLESHOOTING.md).
+- **한계**: 웹훅과 PG 결제 상태(`paid`) 재확인은 설계만 했고, 실결제 완료·취소 구간은 테스트 결제창 제약으로 자동 테스트까지만 검증했다.
 
 ---
 

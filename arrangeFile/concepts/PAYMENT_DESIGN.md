@@ -659,6 +659,7 @@ catch (DataIntegrityViolationException e) { return; }
 
 > 구현: 결제 완료 시 장바구니 정리(`clearPaidCarts`), 결제 취소 시 재고 복구(정책: 출고 전 취소로 간주). 자동 테스트로 확인. 실제 결제 완료·취소 화면 확인은 단계 A의 시나리오 1, 7과 함께 한다.
 
+- **주문 취소 버튼 (2026-11 추가)**: 주문 목록(`orderList.html`)에서 `COMPLETE` 상태 주문에 "주문 취소" 버튼 노출 → `POST /api/v1/payment/cancel/order/{orderId}` → `PaymentService.cancelPaymentByOrder`가 취소 가능한 결제를 찾아 기존 `cancelPayment`(PG 환불 + 상태 전이 + 재고 복구)에 위임. 취소 가능한 결제가 없으면 `IllegalStateException`. 서비스 테스트 2건(성공/취소 불가)으로 확인.
 - 결제 완료 후 사용한 장바구니 항목 삭제 (바로 구매는 해당 없음).
 - 환불 시 재고 복구 정책 결정 후 구현 (취소 = 미출고면 복구, 반품이면 검수 후 복구 등. 정책이 먼저다).
 - 관리자 주문 화면의 상태 표기와 `CANCELED` 연동 확인.
