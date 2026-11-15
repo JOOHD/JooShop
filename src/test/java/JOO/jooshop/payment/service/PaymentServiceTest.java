@@ -394,6 +394,48 @@ class PaymentServiceTest {
         }
 
         @Test
+        @DisplayName("주문 번호로 취소하면 그 주문의 취소 가능한 결제를 찾아 취소하고 주문 상태가 CANCELED가 된다 (사유를 안 보내면 기본 사유)")
+        @SuppressWarnings("unchecked")
+        void cancelPaymentByOrder_success() throws Exception {
+            // given — 주문내역 화면은 paymentHistoryId를 모르고 주문 번호만 보낸다
+            authenticateAs(1L, MemberRole.USER);
+            PaymentHistory history = createPaymentHistoryOf1();
+            Orders order = history.getOrders();
+            order.markPaid();
+
+            given(paymentRepository.findAllByOrders_OrderId(5L)).willReturn(List.of(history));
+            given(paymentRepository.findById(any())).willReturn(Optional.of(history));
+            IamportResponse<Payment> iamportOk = mock(IamportResponse.class);
+            given(iamportOk.getCode()).willReturn(0);
+            given(iamportClient.cancelPaymentByImpUid(any(CancelData.class))).willReturn(iamportOk);
+
+            // when — 본문(사유) 없이 호출
+            paymentService.cancelPaymentByOrder(5L, null, iamportClient);
+
+            // then
+            assertThat(history.getPaymentStatus()).isEqualTo(PaymentStatus.CANCELED);
+            assertThat(order.getPaymentStatus()).isEqualTo(PaymentStatus.CANCELED);
+            verify(iamportClient).cancelPaymentByImpUid(any(CancelData.class));
+            verify(paymentRefundRepository).save(any(PaymentRefund.class));
+        }
+
+        @Test
+        @DisplayName("주문 번호로 취소할 때 취소 가능한 결제가 없으면(이미 취소됨 등) 거부되고 Iamport는 호출되지 않는다")
+        void cancelPaymentByOrder_noCancelablePayment_throwsException() {
+            // 취소 가능한 결제를 찾는 단계에서 먼저 거부되므로 로그인 설정(authenticateAs)은 필요 없다
+            // (쓰이지 않는 stubbing은 UnnecessaryStubbingException이 된다)
+            // 다른 mock을 쓰는 헬퍼는 stubbing 밖에서 먼저 만든다 (UnfinishedStubbingException 방지)
+            PaymentHistory canceled = createCanceledPaymentHistory();
+            given(paymentRepository.findAllByOrders_OrderId(5L)).willReturn(List.of(canceled));
+
+            assertThatThrownBy(() -> paymentService.cancelPaymentByOrder(5L, null, iamportClient))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("취소할 수 있는 결제가 없습니다");
+
+            verifyNoInteractions(iamportClient);
+        }
+
+        @Test
         @DisplayName("남의 결제를 취소하려 하면 거부되고 Iamport 취소 API도 호출되지 않는다")
         void cancelPayment_otherUsersPayment_throwsSecurityException() {
             // given — 결제 주인은 1번 회원, 로그인은 2번 회원

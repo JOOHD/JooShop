@@ -191,6 +191,32 @@ public class PaymentService {
     }
 
     /**
+     * 주문 기준 결제 취소 (주문내역 화면의 "주문 취소" 버튼)
+     *
+     * 화면은 결제 이력(paymentHistoryId)을 모르므로 주문 번호만 보낸다.
+     * 이 주문의 취소 가능한 결제 이력을 찾아 기존 cancelPayment에 위임한다.
+     * 소유자 확인·PG 환불·상태 동기화·재고 복구는 cancelPayment가 그대로 처리한다.
+     * (한 번의 결제 취소는 같은 결제의 모든 상품 이력을 함께 취소하므로 첫 번째 이력만 넘기면 된다)
+     */
+    public IamportResponse<Payment> cancelPaymentByOrder(
+            Long orderId,
+            PaymentCancelDto requestDto,
+            IamportClient iamportClient
+    ) {
+        PaymentHistory target = paymentRepository.findAllByOrders_OrderId(orderId).stream()
+                .filter(PaymentHistory::isCancelable)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("취소할 수 있는 결제가 없습니다. 결제 완료 상태의 주문만 취소할 수 있습니다."));
+
+        // 화면에서 사유를 보내지 않으면 기본 사유를 쓴다
+        PaymentCancelDto dto = (requestDto != null)
+                ? requestDto
+                : new PaymentCancelDto(null, null, "고객 요청 취소", null, null, null);
+
+        return cancelPayment(target.getId(), dto, iamportClient);
+    }
+
+    /**
      * 결제 취소
      *
      * Iamport Checked Exception(IOException, IamportResponseException)을

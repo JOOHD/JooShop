@@ -81,6 +81,18 @@ public class PaymentController {
         return ResponseEntity.ok(paymentService.getPaymentHistoriesByMemberId(memberId));
     }
 
+    // 주문 기준 결제 취소 — 주문내역 화면의 "주문 취소" 버튼이 호출 (본문 없이 주문 번호만 보내도 된다)
+    @PostMapping("/payment/cancel/order/{orderId}")
+    public ResponseEntity<IamportResponse<Payment>> paymentCancelByOrder(
+            @PathVariable Long orderId,
+            @RequestBody(required = false) PaymentCancelDto requestDto
+    ) {
+        IamportResponse<Payment> cancelResponse =
+                paymentService.cancelPaymentByOrder(orderId, requestDto, iamportClient);
+
+        return ResponseEntity.ok(cancelResponse);
+    }
+
     // 결제 취소 요청
     @PostMapping("/payment/cancel/{paymentHistoryId}")
     public ResponseEntity<IamportResponse<Payment>> paymentCancel(
