@@ -252,6 +252,7 @@
 - [x] `PAYMENT_DESIGN.md`(문제 24건), `project_flow/CART_ORDER_PAYMENT.md`·`LOGIN_FLOW.md` 갱신
 - [x] `TROUBLESHOOTING.md` #11(화면 할인가 vs 서버 정가)·#12(중복 결제 방어)·#13(페이지 JWT) 추가 → 13건
 - [x] README 결제 항목·장애 기록 13건, Notion JooShop 결제 문단·장애 기록 갱신, 이력서 JooShop 항목 반영(PDF 교체는 아래)
+- [x] 11/15 `TROUBLESHOOTING.md` #14(SSH 키 히스토리 유출 → 키 교체, EC2 디스크 확장) 추가 → 14건. README 14건 반영. **Notion·이력서(13건 표기)는 14건으로 갱신 필요**
 
 ### 남은 것
 - [ ] 로컬 `./gradlew test` 전체 통과 확인(C단계 + JWT 필터 테스트) → 커밋·푸시 → GitHub Actions 초록불
