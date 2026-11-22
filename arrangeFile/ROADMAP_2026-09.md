@@ -220,7 +220,7 @@
 
 ### 보강 D — 문서 정리
 - [x] ERD 갱신 — 카테고리 트리·위시리스트는 이미 있었고, 프로필 컬럼·`certification_entity`·재고 차감 주석·2026-10 변경 사항 섹션 추가 (10/14)
-- [ ] 라이브 IP 갱신: README/PROJECT_OVERVIEW는 주소 대신 "요청 시 안내" 문구로 변경(10/18, 매일 IP를 고치지 않기 위함). 남은 것: EC2 `.env` URL, 카카오·네이버 redirect URI, Elastic IP 검토
+- [x] (11/22 Elastic IP 할당·연결 완료, `.env`·카카오/네이버 콘솔·GitHub secrets 반영) 라이브 IP 갱신: README/PROJECT_OVERVIEW는 주소 대신 "요청 시 안내" 문구로 변경(10/18, 매일 IP를 고치지 않기 위함). 남은 것: EC2 `.env` URL, 카카오·네이버 redirect URI, Elastic IP 검토
 - [x] 1페이지 요약 확정 → 10/18 README 상단 "핵심 5가지"로 통합(별도 ONE_PAGER 파일은 중복이라 삭제). Notion 첫 화면도 같은 내용
 - [ ] 스크린샷(메인·상품 목록 카드/드롭다운·상세·위시리스트·프로필) 캡처
 

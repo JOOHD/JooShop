@@ -4,7 +4,7 @@
 
 **🔗 라이브 데모**: AWS EC2에 Docker Compose + GitHub Actions CI/CD로 실제 배포했습니다. 비용 절감을 위해 필요할 때만 가동하고 있어, 접속 주소는 요청 시 안내드립니다.
 **API 문서**: [Postman](https://documenter.getpostman.com/view/16649127/2sB2cUC3Qn) / Swagger(`/swagger-ui/index.html`, 서버 실행 후 접속)
-> 도메인/HTTPS는 포트폴리오 목적상 의도적으로 생략했습니다 (Elastic IP 미사용이라 인스턴스 재시작 시 IP가 바뀔 수 있습니다 — 접속이 안 되면 알려주세요).
+> 도메인/HTTPS는 포트폴리오 목적상 의도적으로 생략했습니다 (서버 주소는 Elastic IP로 고정했고, 비용 절감을 위해 서버를 켜 두는 시간이 제한적이라 접속이 안 되면 알려주세요).
 
 > 이 README는 "코드를 처음 보는 사람이 구조를 빠르게 파악하기 위한" 요약입니다.
 > 설계 배경(왜 이렇게 만들었는지), 리팩토링 Before/After, 트러블슈팅 서사는 **[`arrangeFile/portfolio/PROJECT_OVERVIEW.md`](arrangeFile/portfolio/PROJECT_OVERVIEW.md)** 에 자세히 정리되어 있습니다.
@@ -19,7 +19,7 @@
 | **2. JPA 영속성** | `save()`와 flush 시점, Dirty Checking, 양방향 연관관계 불일치를 원인까지 추적해 해결. 상품 목록 N+1은 `@EntityGraph`로 쿼리 11번 → 1번 | [TROUBLESHOOTING](arrangeFile/concepts/TROUBLESHOOTING.md) #1~#3, #6 |
 | **3. 구조 단순화** | Redis 2단계 주문을 Cart→DB 직접 저장으로, JSON 로그인을 Form Login으로 단일화. 핵심 도메인 엔티티(Member/Orders/Product)는 Setter 없이 도메인 메서드로만 상태 변경. 순환 참조는 계층 정리로 해결 | [PROJECT_OVERVIEW](arrangeFile/portfolio/PROJECT_OVERVIEW.md) |
 | **4. 주문·결제** | 주문번호·금액(할인가+배송비)을 서버가 확정하고, 결제 후 PG 결제를 **DB 금액 기준으로 재검증**(소유자·주문번호·상태·금액), 불일치 시 승인된 결제를 자동 취소. 중복 결제는 조회 + 주문 행 잠금 + `imp_uid` UNIQUE로 방어(동시 요청 5개: 5건 → 1건). 주문 상태 전이 규칙, 미결제 주문 만료 배치(재고 복구), 서버 금액 미리보기 API, 주문내역에서 주문 취소(PG 환불 + 재고 복구). 재고 차감은 조건부 UPDATE로 처리하고 동시성 테스트(50 스레드, 재고 10)에서 50건 판매 → 10건으로 확인 | [PAYMENT_DESIGN](arrangeFile/concepts/PAYMENT_DESIGN.md), [CART_ORDER_PAYMENT](arrangeFile/project_flow/CART_ORDER_PAYMENT.md), TROUBLESHOOTING #9, #11, #12 |
-| **5. 배포·운영** | GitHub Actions → DockerHub → EC2 자동 배포, 테스트가 실패하면 배포 차단. 배포 디스크 100% 같은 장애를 직접 겪고 해결 | TROUBLESHOOTING #8 |
+| **5. 배포·운영** | GitHub Actions → DockerHub → EC2 자동 배포, 테스트가 실패하면 배포 차단. 배포 디스크 100%, 노출된 SSH 키·시크릿 교체, Elastic IP로 주소 고정 같은 운영 문제를 직접 겪고 해결 | TROUBLESHOOTING #8, #14 |
 
 한계: HTTPS·도메인 미적용, 모니터링 없음, 이미지는 서버 로컬 저장 → RDS/S3 분리와 Actuator 모니터링이 다음 단계입니다. 결제는 PG 승인 이후 구간(결제 완료·취소)을 자동 테스트로 검증했고 실제 테스트 결제 확인은 남아 있으며, 웹훅·PG 결제 상태 확인은 설계만 해 두었습니다(PAYMENT_DESIGN 7장).
 
