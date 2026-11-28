@@ -150,11 +150,11 @@ Form Login + OAuth2 통합 흐름 모두 `TokenService.issueLoginTokens()`로 �
 
 **서버가 금액의 기준이다 (이후 재설계)**
 
-처음엔 "클라이언트가 보낸 금액 vs Iamport 실결제액"만 비교했는데, 둘 다 클라이언트가 조작할 수 있어서 기준이 될 수 없다는 걸 깨닫고 구조를 다시 잡았다.
+처음엔 "클라이언트가 보낸 금액 vs Iamport 실결제액"만 비교했는데, 결제 검증 코드를 점검하면서, 비교 대상이 둘 다 클라이언트를 거치는 값이라 서버가 믿을 기준이 없다는 점을 확인하고 서버 계산 금액 기준으로 구조를 다시 잡았다.
 
 - **주문 생성 시 서버가 확정**: 할인가(`Product.getDiscountedPrice`)와 배송비(`Orders.calculateDeliveryFee`)를 서버가 계산해 PENDING 주문과 주문번호(merchantUid)를 발급. 화면은 서버 미리보기 API(`/api/v1/order/preview`) 값만 보여 준다.
 - **결제 후 검증**: `imp_uid`로 Iamport를 직접 조회해 실결제액을 가져오고, 주문 행 잠금 → 소유자 → 주문번호 → 멱등성 → 상태(PENDING) → **DB 금액 == PG 금액** 순으로 확인. 불일치·결제 불가 상태면 승인된 결제를 자동 취소.
-- **중복 결제 방어**: 조회 → 주문 행 잠금(`SELECT ... FOR UPDATE`) → `PaymentRecord.imp_uid` UNIQUE. 동시 요청 5개 테스트에서 잠금 없이 5건 → 적용 후 1건.
+- **중복 결제 방어**: 조회 → 주문 행 잠금(`SELECT ... FOR UPDATE`) → `PaymentRecord.imp_uid` UNIQUE. 예상 문제를 미리 예방한 구현이며, 동시 요청 5개 비교 테스트에서 조회만 쓰면 5건 → 3겹 적용 시 1건.
 - **상태 전이 / 정리**: `PaymentStatus.canTransitionTo`로 허용된 전이만 통과. 30분 넘게 결제 안 된 PENDING 주문은 만료 배치가 취소하고 재고 복구. 주문내역의 "주문 취소"도 PG 환불 후 재고를 되돌린다.
 - **바로 구매와 장바구니**는 같은 주문 로직(`OrderLine`)으로 처리하고, 타인 장바구니 접근(IDOR)은 소유자 검증으로 차단.
 - 자세한 설계와 겪은 문제 24건: [`PAYMENT_DESIGN.md`](../concepts/PAYMENT_DESIGN.md), 장애 기록 #9, #11, #12는 [`TROUBLESHOOTING.md`](../concepts/TROUBLESHOOTING.md).
